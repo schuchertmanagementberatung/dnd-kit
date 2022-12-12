@@ -20,6 +20,7 @@ export interface Props {
   strategy?: SortingStrategy;
   id?: string;
   disabled?: boolean | Disabled;
+  placeholder?: boolean;
 }
 
 const ID_PREFIX = 'Sortable';
@@ -57,6 +58,7 @@ export function SortableContext({
   items: userDefinedItems,
   strategy = rectSortingStrategy,
   disabled: disabledProp = false,
+  placeholder = false,
 }: Props) {
   const {
     active,
@@ -69,15 +71,23 @@ export function SortableContext({
   const sortableOverRef = useRef<Over | null>(null);
   const containerId = useUniqueId(ID_PREFIX, id);
   const useDragOverlay = Boolean(dragOverlay.rect !== null);
-  const items = useMemo<UniqueIdentifier[]>(
-    () =>
-      userDefinedItems.map((item) =>
-        typeof item === 'object' && 'id' in item ? item.id : item
-      ),
-    [userDefinedItems]
-  );
+  const activeItemOriginatedFromContainer =
+    active?.data.current?.sortable?.containerId === containerId;
+  const items = useMemo<UniqueIdentifier[]>(() => {
+    const userDefinedIds = userDefinedItems.map((item) =>
+      typeof item === 'object' && 'id' in item ? item.id : item
+    );
+    const showPlaceholder = placeholder && !activeItemOriginatedFromContainer;
+    return showPlaceholder
+      ? [...userDefinedIds, 'placeholder']
+      : userDefinedIds;
+  }, [userDefinedItems, placeholder, activeItemOriginatedFromContainer]);
   const isDragging = active != null;
-  const activeIndex = active ? items.indexOf(active.id) : -1;
+  const activeId = active ? active.id : '';
+  const activeIdIndex = items.indexOf(activeId);
+  const activeIdUsed =
+    activeIdIndex === -1 ? items.indexOf('placeholder') : activeIdIndex;
+  const activeIndex = active ? activeIdUsed : -1;
   const sortableOver = over?.data?.current?.sortable ? over : null;
   if (sortableOver) {
     sortableOverRef.current = sortableOver;
