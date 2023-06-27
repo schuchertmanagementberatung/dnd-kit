@@ -1,5 +1,11 @@
 # @schuchertmanagementberatung/dnd-kit-core
 
+## 13.0.0
+
+### Major Changes
+
+- [`5226b13`](https://github.com/clauderic/dnd-kit/commit/5226b13e90584fb8a11f3a26663ece77331cfa56) Thanks [@heikomat](https://github.com/heikomat)! - only measure droppables when the browser is idle
+
 ## 12.0.0
 
 ### Major Changes
