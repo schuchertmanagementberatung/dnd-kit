@@ -53,9 +53,12 @@ export function useDroppableMeasuring(
         return;
       }
 
-      setContainerIdsScheduledForMeasurement((value) =>
-        value ? value.concat(ids) : ids
-      );
+      // requestIdleCallback is not available in safari, but factro provides a polyfill
+      requestIdleCallback(() => {
+        setContainerIdsScheduledForMeasurement((value) =>
+          value ? value.concat(ids) : ids
+        );
+      });
     },
     [disabledRef]
   );
