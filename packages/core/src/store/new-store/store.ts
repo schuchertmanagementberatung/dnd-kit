@@ -17,6 +17,18 @@ type Actions = {
 };
 export type DndKitStore = State & Actions;
 
+/**
+ * for assumed performance reasons, these arrays don't contain tuples or objects.
+ * Instead an entry consumes a fixed number of places. exmaple,
+ * droppablesToRegister has an id at every even index, and the element to
+ * register at every odd index: droppablesToRegister.push(id, element);
+ */
+const droppablesToRegister: Array<UniqueIdentifier | DroppableContainer> = [];
+const droppablesToUnregister: Array<UniqueIdentifier | UniqueIdentifier> = [];
+const droppablesToUpdateDisabled: Array<
+  UniqueIdentifier | UniqueIdentifier | boolean
+> = [];
+
 export const useDndKitStore = create<DndKitStore>((set, get) => {
   return {
     ...initialState,
@@ -57,58 +69,100 @@ export const useDndKitStore = create<DndKitStore>((set, get) => {
       });
     },
     registerDroppable: (payload: RegisterDroppableActionPayload) => {
-      const state = get();
       const {element} = payload;
       const {id} = element;
-      const containers = new DroppableContainersMap(state.droppable.containers);
-      containers.set(id, element);
 
-      set({
-        droppable: {
-          ...state.droppable,
-          containers,
-        },
+      /**
+       * every entry consumes 2 places in the array, so that we don't have to
+       * create a new tuple or object for every entry
+       */
+      droppablesToRegister.push(id, element);
+      if (droppablesToRegister.length !== 2) {
+        return;
+      }
+
+      queueMicrotask(() => {
+        const state = get();
+        const containers = new DroppableContainersMap(
+          state.droppable.containers
+        );
+        for (let i = 0; i < droppablesToRegister.length; i += 2) {
+          containers.set(
+            droppablesToRegister[i] as UniqueIdentifier,
+            droppablesToRegister[i + 1] as DroppableContainer
+          );
+        }
+        droppablesToRegister.length = 0;
+        set({
+          droppable: {...state.droppable, containers},
+        });
       });
     },
     setDroppableDisabled: (payload: SetDroppableDisabledActionPayload) => {
-      const state = get();
       const {id, key, disabled} = payload;
-      const element = state.droppable.containers.get(id);
 
-      if (!element || key !== element.key) {
+      /**
+       * every entry consumes 3 places in the array, so that we don't have to
+       * create a new tuple or object for every entry
+       */
+      droppablesToUpdateDisabled.push(id, key, disabled);
+      if (droppablesToUpdateDisabled.length !== 3) {
         return;
       }
 
-      const containers = new DroppableContainersMap(state.droppable.containers);
-      containers.set(id, {
-        ...element,
-        disabled,
-      });
+      queueMicrotask(() => {
+        const state = get();
 
-      set({
-        droppable: {
-          ...state.droppable,
-          containers,
-        },
+        const containers = new DroppableContainersMap(
+          state.droppable.containers
+        );
+        for (let i = 0; i < droppablesToUpdateDisabled.length; i += 3) {
+          const id = droppablesToUpdateDisabled[i] as UniqueIdentifier;
+          const key = droppablesToUpdateDisabled[i + 1] as UniqueIdentifier;
+          const disabled = droppablesToUpdateDisabled[i + 2] as boolean;
+          const element = state.droppable.containers.get(id);
+          if (!element || key !== element.key) {
+            continue;
+          }
+          containers.set(id, {...element, disabled});
+        }
+        droppablesToUpdateDisabled.length = 0;
+        set({
+          droppable: {...state.droppable, containers},
+        });
       });
     },
     unregisterDroppable: (payload: UnregisterDroppableActionPayload) => {
-      const state = get();
       const {id, key} = payload;
-      const element = state.droppable.containers.get(id);
 
-      if (!element || key !== element.key) {
+      /**
+       * every entry consumes 2 places in the array, so that we don't have to
+       * create a new tuple or object for every entry
+       */
+      droppablesToUnregister.push(id, key);
+      if (droppablesToRegister.length !== 2) {
         return;
       }
 
-      const containers = new DroppableContainersMap(state.droppable.containers);
-      containers.delete(id);
+      queueMicrotask(() => {
+        const state = get();
 
-      set({
-        droppable: {
-          ...state.droppable,
-          containers,
-        },
+        const containers = new DroppableContainersMap(
+          state.droppable.containers
+        );
+        for (let i = 0; i < droppablesToUnregister.length; i += 2) {
+          const id = droppablesToUnregister[i] as UniqueIdentifier;
+          const key = droppablesToUnregister[i + 1] as UniqueIdentifier;
+          const element = state.droppable.containers.get(id);
+          if (!element || key !== element.key) {
+            continue;
+          }
+          containers.delete(id);
+        }
+        droppablesToUnregister.length = 0;
+        set({
+          droppable: {...state.droppable, containers},
+        });
       });
     },
   };
