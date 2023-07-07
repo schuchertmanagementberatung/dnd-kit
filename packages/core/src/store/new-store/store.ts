@@ -17,6 +17,12 @@ type Actions = {
 };
 export type DndKitStore = State & Actions;
 
+/**
+ * for assumed performance reasons, these arrays don't contain tuples or objects.
+ * Instead an entry consumes a fixed number of places. exmaple,
+ * droppablesToRegister has an id at every even index, and the element to
+ * register at every odd index: droppablesToRegister.push(id, element);
+ */
 const droppablesToRegister = [];
 const droppablesToUnregister = [];
 const droppablesToUpdateDisabled = [];
@@ -63,6 +69,11 @@ export const useDndKitStore = create<DndKitStore>((set, get) => {
     registerDroppable: (payload: RegisterDroppableActionPayload) => {
       const {element} = payload;
       const {id} = element;
+
+      /**
+       * every entry consumes 2 places in the array, so that we don't have to
+       * create a new tuple or object for every entry
+       */
       droppablesToRegister.push(id, element);
       if (droppablesToRegister.length !== 2) {
         return;
@@ -84,6 +95,11 @@ export const useDndKitStore = create<DndKitStore>((set, get) => {
     },
     setDroppableDisabled: (payload: SetDroppableDisabledActionPayload) => {
       const {id, key, disabled} = payload;
+
+      /**
+       * every entry consumes 3 places in the array, so that we don't have to
+       * create a new tuple or object for every entry
+       */
       droppablesToUpdateDisabled.push(id, key, disabled);
       if (droppablesToUpdateDisabled.length !== 3) {
         return;
@@ -114,6 +130,10 @@ export const useDndKitStore = create<DndKitStore>((set, get) => {
     unregisterDroppable: (payload: UnregisterDroppableActionPayload) => {
       const {id, key} = payload;
 
+      /**
+       * every entry consumes 2 places in the array, so that we don't have to
+       * create a new tuple or object for every entry
+       */
       droppablesToUnregister.push(id, key);
       if (droppablesToRegister.length !== 2) {
         return;
