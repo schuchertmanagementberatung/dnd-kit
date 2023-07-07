@@ -1,5 +1,15 @@
 # @schuchertmanagementberatung/dnd-kit-core
 
+## 14.0.0
+
+### Major Changes
+
+- [`c5c98a0`](https://github.com/clauderic/dnd-kit/commit/c5c98a08055779644f0ec0408a08586f8ffa452f) Thanks [@heikomat](https://github.com/heikomat)! - batch containerIds-rescheduling
+
+### Minor Changes
+
+- [`ad12458`](https://github.com/clauderic/dnd-kit/commit/ad12458bac49a4b97225f68544c2d1ad41b5e48d) Thanks [@heikomat](https://github.com/heikomat)! - batch updates to reigstered droppables for major performance boost
+
 ## 13.0.0
 
 ### Major Changes
