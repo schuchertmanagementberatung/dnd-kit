@@ -1,12 +1,13 @@
-import {useCallback, useEffect, useRef, useState} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   useLatestValue,
   useLazyMemo,
 } from '@schuchertmanagementberatung/dnd-kit-utilities';
 
-import {Rect} from '../../utilities/rect';
-import type {DroppableContainer, RectMap} from '../../store/types';
-import type {ClientRect, UniqueIdentifier} from '../../types';
+import { Rect } from '../../utilities/rect';
+import type { DroppableContainer, RectMap } from '../../store/types';
+import type { ClientRect, UniqueIdentifier } from '../../types';
+import { requestSingleIdleCallback } from './requestSingleIdleCallback';
 
 interface Arguments {
   dragging: boolean;
@@ -36,27 +37,44 @@ const defaultValue: RectMap = new Map();
 
 export function useDroppableMeasuring(
   containers: DroppableContainer[],
-  {dragging, dependencies, config}: Arguments
+  { dragging, dependencies, config }: Arguments
 ) {
   const [
     containerIdsScheduledForMeasurement,
     setContainerIdsScheduledForMeasurement,
   ] = useState<UniqueIdentifier[] | null>(null);
   const measuringScheduled = containerIdsScheduledForMeasurement != null;
-  const {frequency, measure, strategy} = config;
+  const { frequency, measure, strategy } = config;
   const containersRef = useRef(containers);
   const disabled = isDisabled();
   const disabledRef = useLatestValue(disabled);
+
+  const idsToAdd = useRef<Set<UniqueIdentifier> | void>(undefined);
+
   const measureDroppableContainers = useCallback(
     (ids: UniqueIdentifier[] = []) => {
       if (disabledRef.current) {
         return;
       }
 
+      let isFirstCall = idsToAdd.current === undefined;
+      if (isFirstCall) {
+        idsToAdd.current = new Set();
+      }
+      for (const id of ids) {
+        (idsToAdd.current as Set<UniqueIdentifier>).add(id);
+      }
+
+      if (!isFirstCall) {
+        return;
+      }
+
       // requestIdleCallback is not available in safari, but factro provides a polyfill
-      requestIdleCallback(() => {
+      requestSingleIdleCallback(() => {
+        const newIds = idsToAdd.current as Set<UniqueIdentifier>;
+        idsToAdd.current = undefined;
         setContainerIdsScheduledForMeasurement((value) =>
-          value ? value.concat(ids) : ids
+          value ? value.concat(Array.from(newIds)) : ids
         );
       });
     },
