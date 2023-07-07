@@ -1,9 +1,9 @@
-import { create } from 'zustand';
-import { getInitialState } from '../reducer';
-import type { DroppableContainer, State } from '../types';
-import { DroppableContainersMap } from '../constructors';
+import {create} from 'zustand';
+import {getInitialState} from '../reducer';
+import type {DroppableContainer, State} from '../types';
+import {DroppableContainersMap} from '../constructors';
 
-import type { Coordinates, UniqueIdentifier } from '../../types';
+import type {Coordinates, UniqueIdentifier} from '../../types';
 
 const initialState = getInitialState();
 
@@ -55,14 +55,14 @@ export const useDndKitStore = create<DndKitStore>((set, get) => {
         draggable: {
           ...state.draggable,
           active: null,
-          initialCoordinates: { x: 0, y: 0 },
-          translate: { x: 0, y: 0 },
+          initialCoordinates: {x: 0, y: 0},
+          translate: {x: 0, y: 0},
         },
       });
     },
     registerDroppable: (payload: RegisterDroppableActionPayload) => {
-      const { element } = payload;
-      const { id } = element;
+      const {element} = payload;
+      const {id} = element;
       droppablesToRegister.push(id, element);
       if (droppablesToRegister.length !== 2) {
         return;
@@ -78,12 +78,12 @@ export const useDndKitStore = create<DndKitStore>((set, get) => {
         }
         droppablesToRegister.length = 0;
         set({
-          droppable: { ...state.droppable, containers },
+          droppable: {...state.droppable, containers},
         });
       });
     },
     setDroppableDisabled: (payload: SetDroppableDisabledActionPayload) => {
-      const { id, key, disabled } = payload;
+      const {id, key, disabled} = payload;
       droppablesToUpdateDisabled.push(id, key, disabled);
       if (droppablesToUpdateDisabled.length !== 3) {
         return;
@@ -103,16 +103,16 @@ export const useDndKitStore = create<DndKitStore>((set, get) => {
           if (!element || key !== element.key) {
             continue;
           }
-          containers.set(id, { ...element, disabled });
+          containers.set(id, {...element, disabled});
         }
         droppablesToUpdateDisabled.length = 0;
         set({
-          droppable: { ...state.droppable, containers },
+          droppable: {...state.droppable, containers},
         });
       });
     },
     unregisterDroppable: (payload: UnregisterDroppableActionPayload) => {
-      const { id, key } = payload;
+      const {id, key} = payload;
 
       droppablesToUnregister.push(id, key);
       if (droppablesToRegister.length !== 2) {
@@ -136,7 +136,7 @@ export const useDndKitStore = create<DndKitStore>((set, get) => {
         }
         droppablesToUnregister.length = 0;
         set({
-          droppable: { ...state.droppable, containers },
+          droppable: {...state.droppable, containers},
         });
       });
     },
