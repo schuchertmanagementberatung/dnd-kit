@@ -7,7 +7,6 @@ import {
 import {Rect} from '../../utilities/rect';
 import type {DroppableContainer, RectMap} from '../../store/types';
 import type {ClientRect, UniqueIdentifier} from '../../types';
-import {requestSingleIdleCallback} from './requestSingleIdleCallback';
 
 interface Arguments {
   dragging: boolean;
@@ -70,7 +69,7 @@ export function useDroppableMeasuring(
       }
 
       // requestIdleCallback is not available in safari, but factro provides a polyfill
-      requestSingleIdleCallback(() => {
+      requestIdleCallback(() => {
         const newIds = idsToAdd.current as Set<UniqueIdentifier>;
         idsToAdd.current = undefined;
         setContainerIdsScheduledForMeasurement((value) =>
