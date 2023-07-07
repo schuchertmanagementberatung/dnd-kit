@@ -23,9 +23,11 @@ export type DndKitStore = State & Actions;
  * droppablesToRegister has an id at every even index, and the element to
  * register at every odd index: droppablesToRegister.push(id, element);
  */
-const droppablesToRegister = [];
-const droppablesToUnregister = [];
-const droppablesToUpdateDisabled = [];
+const droppablesToRegister: Array<UniqueIdentifier | DroppableContainer> = [];
+const droppablesToUnregister: Array<UniqueIdentifier | UniqueIdentifier> = [];
+const droppablesToUpdateDisabled: Array<
+  UniqueIdentifier | UniqueIdentifier | boolean
+> = [];
 
 export const useDndKitStore = create<DndKitStore>((set, get) => {
   return {
@@ -85,7 +87,10 @@ export const useDndKitStore = create<DndKitStore>((set, get) => {
           state.droppable.containers
         );
         for (let i = 0; i < droppablesToRegister.length; i += 2) {
-          containers.set(droppablesToRegister[i], droppablesToRegister[i + 1]);
+          containers.set(
+            droppablesToRegister[i] as UniqueIdentifier,
+            droppablesToRegister[i + 1] as DroppableContainer
+          );
         }
         droppablesToRegister.length = 0;
         set({
@@ -112,9 +117,9 @@ export const useDndKitStore = create<DndKitStore>((set, get) => {
           state.droppable.containers
         );
         for (let i = 0; i < droppablesToUpdateDisabled.length; i += 3) {
-          const id = droppablesToUpdateDisabled[i];
-          const key = droppablesToUpdateDisabled[i + 1];
-          const disabled = droppablesToUpdateDisabled[i + 2];
+          const id = droppablesToUpdateDisabled[i] as UniqueIdentifier;
+          const key = droppablesToUpdateDisabled[i + 1] as UniqueIdentifier;
+          const disabled = droppablesToUpdateDisabled[i + 2] as boolean;
           const element = state.droppable.containers.get(id);
           if (!element || key !== element.key) {
             continue;
@@ -146,8 +151,8 @@ export const useDndKitStore = create<DndKitStore>((set, get) => {
           state.droppable.containers
         );
         for (let i = 0; i < droppablesToUnregister.length; i += 2) {
-          const id = droppablesToUnregister[i];
-          const key = droppablesToUnregister[i + 1];
+          const id = droppablesToUnregister[i] as UniqueIdentifier;
+          const key = droppablesToUnregister[i + 1] as UniqueIdentifier;
           const element = state.droppable.containers.get(id);
           if (!element || key !== element.key) {
             continue;
