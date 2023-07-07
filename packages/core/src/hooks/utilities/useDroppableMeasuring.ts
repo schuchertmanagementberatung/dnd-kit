@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {
   useLatestValue,
   useLazyMemo,
 } from '@schuchertmanagementberatung/dnd-kit-utilities';
 
-import { Rect } from '../../utilities/rect';
-import type { DroppableContainer, RectMap } from '../../store/types';
-import type { ClientRect, UniqueIdentifier } from '../../types';
-import { requestSingleIdleCallback } from './requestSingleIdleCallback';
+import {Rect} from '../../utilities/rect';
+import type {DroppableContainer, RectMap} from '../../store/types';
+import type {ClientRect, UniqueIdentifier} from '../../types';
+import {requestSingleIdleCallback} from './requestSingleIdleCallback';
 
 interface Arguments {
   dragging: boolean;
@@ -37,14 +37,14 @@ const defaultValue: RectMap = new Map();
 
 export function useDroppableMeasuring(
   containers: DroppableContainer[],
-  { dragging, dependencies, config }: Arguments
+  {dragging, dependencies, config}: Arguments
 ) {
   const [
     containerIdsScheduledForMeasurement,
     setContainerIdsScheduledForMeasurement,
   ] = useState<UniqueIdentifier[] | null>(null);
   const measuringScheduled = containerIdsScheduledForMeasurement != null;
-  const { frequency, measure, strategy } = config;
+  const {frequency, measure, strategy} = config;
   const containersRef = useRef(containers);
   const disabled = isDisabled();
   const disabledRef = useLatestValue(disabled);
