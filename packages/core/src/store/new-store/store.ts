@@ -1,9 +1,9 @@
-import {create} from 'zustand';
-import {getInitialState} from '../reducer';
-import type {DroppableContainer, State} from '../types';
-import {DroppableContainersMap} from '../constructors';
+import { create } from 'zustand';
+import { getInitialState } from '../reducer';
+import type { DroppableContainer, State } from '../types';
+import { DroppableContainersMap } from '../constructors';
 
-import type {Coordinates, UniqueIdentifier} from '../../types';
+import type { Coordinates, UniqueIdentifier } from '../../types';
 
 const initialState = getInitialState();
 
@@ -16,6 +16,10 @@ type Actions = {
   unregisterDroppable: (payload: UnregisterDroppableActionPayload) => void;
 };
 export type DndKitStore = State & Actions;
+
+const droppablesToRegister = [];
+const droppablesToUnregister = [];
+const droppablesToUpdateDisabled = [];
 
 export const useDndKitStore = create<DndKitStore>((set, get) => {
   return {
@@ -51,64 +55,89 @@ export const useDndKitStore = create<DndKitStore>((set, get) => {
         draggable: {
           ...state.draggable,
           active: null,
-          initialCoordinates: {x: 0, y: 0},
-          translate: {x: 0, y: 0},
+          initialCoordinates: { x: 0, y: 0 },
+          translate: { x: 0, y: 0 },
         },
       });
     },
     registerDroppable: (payload: RegisterDroppableActionPayload) => {
-      const state = get();
-      const {element} = payload;
-      const {id} = element;
-      const containers = new DroppableContainersMap(state.droppable.containers);
-      containers.set(id, element);
+      const { element } = payload;
+      const { id } = element;
+      droppablesToRegister.push(id, element);
+      if (droppablesToRegister.length !== 2) {
+        return;
+      }
 
-      set({
-        droppable: {
-          ...state.droppable,
-          containers,
-        },
+      queueMicrotask(() => {
+        const state = get();
+        const containers = new DroppableContainersMap(
+          state.droppable.containers
+        );
+        for (let i = 0; i < droppablesToRegister.length; i += 2) {
+          containers.set(droppablesToRegister[i], droppablesToRegister[i + 1]);
+        }
+        droppablesToRegister.length = 0;
+        set({
+          droppable: { ...state.droppable, containers },
+        });
       });
     },
     setDroppableDisabled: (payload: SetDroppableDisabledActionPayload) => {
-      const state = get();
-      const {id, key, disabled} = payload;
-      const element = state.droppable.containers.get(id);
-
-      if (!element || key !== element.key) {
+      const { id, key, disabled } = payload;
+      droppablesToUpdateDisabled.push(id, key, disabled);
+      if (droppablesToUpdateDisabled.length !== 3) {
         return;
       }
 
-      const containers = new DroppableContainersMap(state.droppable.containers);
-      containers.set(id, {
-        ...element,
-        disabled,
-      });
+      queueMicrotask(() => {
+        const state = get();
 
-      set({
-        droppable: {
-          ...state.droppable,
-          containers,
-        },
+        const containers = new DroppableContainersMap(
+          state.droppable.containers
+        );
+        for (let i = 0; i < droppablesToUpdateDisabled.length; i += 3) {
+          const id = droppablesToUpdateDisabled[i];
+          const key = droppablesToUpdateDisabled[i + 1];
+          const disabled = droppablesToUpdateDisabled[i + 2];
+          const element = state.droppable.containers.get(id);
+          if (!element || key !== element.key) {
+            continue;
+          }
+          containers.set(id, { ...element, disabled });
+        }
+        droppablesToUpdateDisabled.length = 0;
+        set({
+          droppable: { ...state.droppable, containers },
+        });
       });
     },
     unregisterDroppable: (payload: UnregisterDroppableActionPayload) => {
-      const state = get();
-      const {id, key} = payload;
-      const element = state.droppable.containers.get(id);
+      const { id, key } = payload;
 
-      if (!element || key !== element.key) {
+      droppablesToUnregister.push(id, key);
+      if (droppablesToRegister.length !== 2) {
         return;
       }
 
-      const containers = new DroppableContainersMap(state.droppable.containers);
-      containers.delete(id);
+      queueMicrotask(() => {
+        const state = get();
 
-      set({
-        droppable: {
-          ...state.droppable,
-          containers,
-        },
+        const containers = new DroppableContainersMap(
+          state.droppable.containers
+        );
+        for (let i = 0; i < droppablesToUnregister.length; i += 2) {
+          const id = droppablesToUnregister[i];
+          const key = droppablesToUnregister[i + 1];
+          const element = state.droppable.containers.get(id);
+          if (!element || key !== element.key) {
+            continue;
+          }
+          containers.delete(id);
+        }
+        droppablesToUnregister.length = 0;
+        set({
+          droppable: { ...state.droppable, containers },
+        });
       });
     },
   };
