@@ -47,16 +47,33 @@ export function useDroppableMeasuring(
   const containersRef = useRef(containers);
   const disabled = isDisabled();
   const disabledRef = useLatestValue(disabled);
+
+  const idsToAdd = useRef<Set<UniqueIdentifier> | void>(undefined);
+
   const measureDroppableContainers = useCallback(
     (ids: UniqueIdentifier[] = []) => {
       if (disabledRef.current) {
         return;
       }
 
+      let isFirstCall = idsToAdd.current === undefined;
+      if (isFirstCall) {
+        idsToAdd.current = new Set();
+      }
+      for (const id of ids) {
+        (idsToAdd.current as Set<UniqueIdentifier>).add(id);
+      }
+
+      if (!isFirstCall) {
+        return;
+      }
+
       // requestIdleCallback is not available in safari, but factro provides a polyfill
       requestIdleCallback(() => {
+        const newIds = idsToAdd.current as Set<UniqueIdentifier>;
+        idsToAdd.current = undefined;
         setContainerIdsScheduledForMeasurement((value) =>
-          value ? value.concat(ids) : ids
+          value ? value.concat(Array.from(newIds)) : ids
         );
       });
     },
